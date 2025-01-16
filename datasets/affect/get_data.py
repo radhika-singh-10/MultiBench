@@ -22,6 +22,98 @@ from robustness.timeseries_robust import add_timeseries_noise
 
 np.seterr(divide='ignore', invalid='ignore')
 
+AUDIO_SAVE_DIR = "./audio_data"  # Directory to store audio files
+
+def download_audio_file(url: str, save_dir: str = AUDIO_SAVE_DIR) -> str:
+    """
+    Download an audio file from the given URL and save it locally.
+
+    Args:
+        url (str): URL of the audio file.
+        save_dir (str): Directory to save the downloaded file.
+
+    Returns:
+        str: Local path of the downloaded file.
+    """
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    file_name = os.path.basename(url)
+    save_path = os.path.join(save_dir, file_name)
+
+    if os.path.exists(save_path):
+        print(f"File already exists: {save_path}")
+        return save_path
+
+    try:
+        print(f"Downloading {file_name} from {url}")
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+
+        with open(save_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
+                    file.write(chunk)
+
+        print(f"Saved: {save_path}")
+        return save_path
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to download {url}: {e}")
+        return None
+
+def process_audio_files(audio_data: List[str]) -> List[str]:
+    """
+    Process a list of audio file URLs or paths, ensuring all files are accessible.
+
+    Args:
+        audio_data (List[str]): List of audio file URLs or paths.
+
+    Returns:
+        List[str]: List of local paths to the audio files.
+    """
+    processed_audio_files = []
+
+    for audio in audio_data:
+        if audio.startswith("http"):  # Remote file
+            local_path = download_audio_file(audio)
+            if local_path:
+                processed_audio_files.append(local_path)
+        else:  # Local file
+            if os.path.exists(audio):
+                processed_audio_files.append(audio)
+            else:
+                print(f"File not found: {audio}")
+
+    return processed_audio_files
+
+# Integration Example
+def integrate_audio_extraction(filepath: str):
+    """
+    Integrates the audio extraction logic into the dataset processing.
+
+    Args:
+        filepath (str): Path to the dataset file.
+    """
+    with open(filepath, "rb") as f:
+        dataset = pickle.load(f)
+
+    # Assuming audio file paths/URLs are stored under 'audio_files' key in the dataset
+    audio_files = dataset.get("audio_files", [])
+    local_audio_paths = process_audio_files(audio_files)
+
+    # Update the dataset with local paths
+    dataset["processed_audio_files"] = local_audio_paths
+
+    # Save the updated dataset (optional)
+    with open(filepath, "wb") as f:
+        pickle.dump(dataset, f)
+
+    print(f"Audio files processed and updated in dataset: {filepath}")
+
+
+
+
+
 def drop_entry(dataset):
     """Drop entries where there's no text in the data."""
     drop = []
@@ -450,7 +542,8 @@ def _process_2(inputs: List):
 if __name__ == '__main__':
     traindata, validdata, test_robust = \
     get_dataloader('./humor.pkl', robust_test=False, max_pad=True, task='classification', data_type='humor', max_seq_len=40)
-
+    dataset_path = "./humor.pkl"
+    integrate_audio_extraction(dataset_path)
     # keys = list(test_robust.keys())
     
 
