@@ -9,8 +9,8 @@ from numpy.core.numeric import zeros_like
 from torch.nn.functional import pad
 from torch.nn import functional as F
 
-sys.path.append(os.getcwd())
-
+#sys.path.append(os.getcwd())
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 import torch
 import torchtext as text
 from collections import defaultdict
