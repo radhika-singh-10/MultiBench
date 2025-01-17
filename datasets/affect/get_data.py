@@ -12,8 +12,8 @@ from torch.nn import functional as F
 import requests
 import robustness
 print(robustness.__file__)
-#sys.path.append(os.getcwd())
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.getcwd())
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 import torch
 import torchtext as text
 from collections import defaultdict
@@ -460,7 +460,7 @@ class Affectdataset(Dataset):
         self.dataset['audio'][self.dataset['audio'] == -np.inf] = 0.0
 
     def __getitem__(self, ind):
-        """Get item from dataset."""
+        #"""Get item from dataset."""
         # vision = torch.tensor(vision)
         # audio = torch.tensor(audio)
         # text = torch.tensor(text)
@@ -635,10 +635,10 @@ def get_dataloader(
 
         # Add timeseries noises
 
-        # for i, text in enumerate(robust_text_numpy):
+        for i, text in enumerate(robust_text_numpy):
         
-        #     alldata_test = timeseries_robustness([alldata['test']['vision'], alldata['test']['audio'], text], noise_level=i/10)
-        #     test.append(alldata_test)
+            alldata_test = timeseries_robustness([alldata['test']['vision'], alldata['test']['audio'], text], noise_level=i/10)
+            test.append(alldata_test)
 
         robust_timeseries = []
         alldata['test'] = drop_entry(alldata['test'])
@@ -648,9 +648,9 @@ def get_dataloader(
             #     noise_level=i / (10 * 3), rand_drop=False)
             
             test = dict()
-            #test['vision'] = robust_timeseries_tmp[0]
-            # test['audio'] = robust_timeseries_tmp[1]
-            # test['text'] = robust_timeseries_tmp[2]
+            test['vision'] = robust_timeseries_tmp[0]
+            test['audio'] = robust_timeseries_tmp[1]
+            test['text'] = robust_timeseries_tmp[2]
             test['labels'] = alldata['test']['labels']
             test = drop_entry(test)
             # print('test entries: {}'.format(test['vision'].shape))
